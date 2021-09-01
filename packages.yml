@@ -1,0 +1,83 @@
+- hosts: localhost
+  connection: local
+
+  vars:
+    homebrew_taps:
+      - homebrew/cask-versions
+      - buildpack/tap
+
+    homebrew_packages:
+      # Fundamental
+      - name: bash-completion
+      - name: telnet
+      - name: git
+      - name: jq
+      - name: peco
+      - name: exa
+      - name: bat
+      - name: direnv
+      - name: dnsmasq
+      - name: watch
+
+      # Database
+      - name: mysql
+      - name: postgresql
+
+      # Virtual Environment
+      - name: anyenv
+
+      # Cloud Native
+      - name: minikube
+      - name: kubectl
+      - name: kubectx
+      - name: k9s
+      - name: kube-ps1
+      - name: helm
+      - name: kind
+      - name: buildpacks/tap/pack
+
+      # Aws Tool
+      - name: awscli
+      - name: awslogs
+
+      # Software Spec
+      - name: deno
+
+    # homebrew_cask_packages:
+    #   # Java Completion
+    #   - name: homebrew/cask-versions/adoptopenjdk8
+    #   - name: adoptopenjdk11
+    #   - name: adoptopenjdk13
+
+      # Browser Tool
+      - name: chromedriver
+
+  tasks:
+    - name: homebrew update
+      homebrew:
+        update_homebrew: yes
+
+    - name: homebrew tap
+      homebrew_tap:
+        name: '{{ item }}'
+        state: present
+      with_items: '{{ homebrew_taps }}'
+
+    - name: homebrew packages install
+      homebrew:
+        name: '{{ item.name }}'
+        state: '{{ item.state | default("present") }}'
+      with_items: '{{ homebrew_packages }}'
+
+    - name: homebrew cask packages install
+      homebrew_cask: name={{ item.name }} state=installed
+      with_items: '{{ homebrew_cask_packages }}'
+
+    - name: bash completion
+      blockinfile:
+        path: ~/.bash_profile
+        create: yes
+        block: |
+          if [ -f $(brew --prefix)/etc/bash_completion ]; then
+            . $(brew --prefix)/etc/bash_completion
+          fi
